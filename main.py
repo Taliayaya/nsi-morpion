@@ -1,21 +1,275 @@
 import pygame
 
-surf = pygame.display.set_mode((900, 900))
-run = True
-while run:
-    pygame.draw.rect(surf, (255, 255, 255), pygame.Rect(0, 0, 300, 300))
-    pygame.display.flip()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                print("vous avez appuyé sur la touche espace")
-            elif event.key == pygame.K_a:
-                print("vous avez appuyé sur la touche A")
-            elif event.key == pygame.K_RETURN:
-                print("vous avez appuyé sur la touche Entrée")
+# Window Size
+WINDOWSIZE = 600  # aussi disponible en 900
+
+# Colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+# Case selection images
+X = pygame.image.load('assets/images/X.png')
+O = pygame.image.load('assets/images/O.png')
+VICTORY_X = pygame.image.load('assets/images/victoryX.png')
+VICTORY_O = pygame.image.load('assets/images/victoryO.png')
+
+
+class Morpion:
+    def __init__(self, windowSize: int) -> None:
+        self.windowSize = windowSize
+        self.turn = 0
+        self.morpion = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        ####
+        # Permet de calculer les dimensions des cases
+        # à partir de la taille de la fenêtre indiquée (WINDOWSIZE)
+        ####
+        if (windowSize-12) % 3 == 0:
+            border = 3
+            length = (windowSize-12)//3  # coté d'une case
+            self.coordColumn1 = border
+            self.coordColumn2 = self.coordColumn1+border+length
+            self.coordColumn3 = self.coordColumn2+border+length
+
+            # Définie les emplacements de chaque case
+            self.coordonneesCasesX1 = [
+                self.coordColumn1, self.coordColumn2, self.coordColumn3]*3
+            self.coordonneesCasesY1 = [self.coordColumn1, self.coordColumn1, self.coordColumn1, self.coordColumn2,
+                                       self.coordColumn2, self.coordColumn2, self.coordColumn3, self.coordColumn3, self.coordColumn3]
+            self.coordonneesCasesX2 = [length]*9
+            self.coordonneesCasesY2 = [length]*9
+
+            # Redimensionne les images pour rentrer dans les cases
+            self.X = pygame.transform.scale(X, (length, length))
+            self.O = pygame.transform.scale(O, (length, length))
+            self.victory_O = pygame.transform.scale(
+                VICTORY_O, (length, length))
+            self.victory_X = pygame.transform.scale(
+                VICTORY_X, (length, length))
+
+        self.surf = pygame.display.set_mode((self.windowSize, self.windowSize))
+        pygame.display.set_caption('Jeu de morpion')
+
+    def handleVictory(self):
+        """Gère tous les cas de victoire possible
+        Renvoie un tuple contenant la lettre du gagnant 
+        ainsi que l'indice des cases qui ont permis la victoire
+        """
+        if self.morpion[0][0] == self.morpion[0][1] == self.morpion[0][2] and not self.morpion[0][0] == 0:
+            # correspond à :
+            # X X X
+            # 0 0 0
+            # 0 0 0
+            print('VICTORY')
+            return self.morpion[0][0], (0, 1, 2)
+        elif self.morpion[1][0] == self.morpion[1][1] == self.morpion[1][2] and not self.morpion[1][0] == 0:
+            # correspond à :
+            # 0 0 0
+            # X X X
+            # 0 0 0
+            print('VICTORY')
+            return self.morpion[1][0], (3, 4, 5)
+        elif self.morpion[2][0] == self.morpion[2][1] == self.morpion[2][2] and not self.morpion[2][0] == 0:
+            # correspond à :
+            # 0 0 0
+            # 0 0 0
+            # X X X
+            print('VICTORY')
+            return self.morpion[2][0], (6, 7, 8)
+        elif self.morpion[0][0] == self.morpion[1][0] == self.morpion[2][0] and not self.morpion[0][0] == 0:
+            # correspond à :
+            # X 0 0
+            # X 0 0
+            # X 0 0
+            print('VICTORY')
+            return self.morpion[0][0], (0, 3, 6)
+        elif self.morpion[0][1] == self.morpion[1][1] == self.morpion[2][1] and not self.morpion[0][1] == 0:
+            # correspond à :
+            # 0 X 0
+            # 0 X 0
+            # 0 X 0
+            print('VICTORY')
+            return self.morpion[0][1], (1, 4, 7)
+        elif self.morpion[0][2] == self.morpion[1][2] == self.morpion[2][2] and not self.morpion[0][2] == 0:
+            # correspond à :
+            # 0 0 X
+            # 0 0 X
+            # 0 0 X
+            print('VICTORY')
+            return self.morpion[0][2], (2, 5, 8)
+        elif self.morpion[0][0] == self.morpion[1][1] == self.morpion[2][2] and not self.morpion[0][0] == 0:
+            # correspond à :
+            # X 0 0
+            # 0 X 0
+            # 0 0 X
+            print('VICTORY')
+            return self.morpion[0][0], (0, 4, 8)
+        elif self.morpion[2][0] == self.morpion[1][1] == self.morpion[0][2] and not self.morpion[2][0] == 0:
+            # correspond à :
+            # 0 0 X
+            # 0 X 0
+            # X 0 0
+            print('VICTORY')
+            return self.morpion[2][0], (6, 4, 2)
+
+    def setVictory(self, victoryTuple):
+        winner = victoryTuple[0]
+        pos = victoryTuple[1]
+        if winner == 'X':
+            winnerIcon = self.victory_X
+        else:
+            winnerIcon = self.victory_O
+        self.listCase[pos[0]].selected(winnerIcon)
+        self.listCase[pos[1]].selected(winnerIcon)
+        self.listCase[pos[2]].selected(winnerIcon)
+
+    def handleSelect(self, clickPos):
+        """Permet de gérer la sélection du click
+        et de sélectionner la case correspondante à l'emplacement du click
+
+        Args:
+            clickPos (tuple): correspond aux coordonnées du clic de la souris
+        """
+
+        # Permet de déterminer à qui il s'agit de jouer
+        if self.turn % 2 == 0:
+            selectionImage = self.X
+            user = 'X'
+        else:
+            selectionImage = self.O
+            user = 'O'
+
+        ###
+        # Effectue les tests d'emplacements de souris
+        # Colonne -> lignes
+        # puis selectionne la case correspondante
+        # et modifie self.morpion
+        ###
+        if clickPos[0] <= self.coordColumn2:
+            if clickPos[1] <= self.coordColumn2:
+                # correspond à
+                # X 0 0
+                # 0 0 0
+                # 0 0 0
+                self.listCase[0].selected(selectionImage)
+                self.morpion[0][0] = user
+            elif clickPos[1] <= self.coordColumn3:
+                # correspond à
+                # 0 0 0
+                # X 0 0
+                # 0 0 0
+                self.listCase[3].selected(selectionImage)
+                self.morpion[1][0] = user
             else:
-                print("vous avez appuyé sur une touche")
-    pygame.display.flip()
-pygame.quit()
+                # correspond à
+                # 0 0 0
+                # 0 0 0
+                # X 0 0
+                self.listCase[6].selected(selectionImage)
+                self.morpion[2][0] = user
+        elif clickPos[0] <= self.coordColumn3:
+            if clickPos[1] <= self.coordColumn2:
+                # correspond à
+                # 0 X 0
+                # 0 0 0
+                # 0 0 0
+                self.listCase[1].selected(selectionImage)
+                self.morpion[0][1] = user
+            elif clickPos[1] <= self.coordColumn3:
+                # correspond à
+                # 0 0 0
+                # 0 X 0
+                # 0 0 0
+                self.listCase[4].selected(selectionImage)
+                self.morpion[1][1] = user
+            else:
+                # correspond à
+                # 0 0 0
+                # 0 0 0
+                # 0 X 0
+                self.listCase[7].selected(selectionImage)
+                self.morpion[2][1] = user
+        else:
+            if clickPos[1] <= self.coordColumn2:
+                # correspond à
+                # 0 0 X
+                # 0 0 0
+                # 0 0 0
+                self.listCase[2].selected(selectionImage)
+                self.morpion[0][2] = user
+            elif clickPos[1] <= self.coordColumn3:
+                # correspond à
+                # 0 0 0
+                # 0 0 X
+                # 0 0 0
+                self.listCase[5].selected(selectionImage)
+                self.morpion[1][2] = user
+            else:
+                # correspond à
+                # 0 0 0
+                # 0 0 0
+                # 0 0 X
+                self.listCase[8].selected(selectionImage)
+                self.morpion[2][2] = user
+        victoryCoord = self.handleVictory()
+        if(victoryCoord):
+            self.setVictory(victoryCoord)
+        self.turn += 1
+        print(self.morpion)
+
+    def start(self):
+        run = True
+        clock = pygame.time.Clock()
+
+        # Fait apparaître les cases
+        # de gauche à droite et de haut en bas
+        # indices de self.listCase :
+        # 0 1 2
+        # 3 4 5
+        # 6 7 8
+        self.listCase = list(map(Case, self.coordonneesCasesX1, self.coordonneesCasesY1,
+                                 self.coordonneesCasesX2, self.coordonneesCasesY2, [self.surf]*9))
+        while run:
+            clock.tick(30)
+            pygame.display.flip()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if pygame.mouse.get_pressed() == (1, 0, 0):
+                        clickPos = pygame.mouse.get_pos()
+                        self.handleSelect(clickPos)
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        print("vous avez appuyé sur la touche espace")
+                    elif event.key == pygame.K_a:
+                        print("vous avez appuyé sur la touche A")
+                    elif event.key == pygame.K_RETURN:
+                        print("vous avez appuyé sur la touche Entrée")
+                    else:
+                        print("vous avez appuyé sur une touche")
+            pygame.display.flip()
+        pygame.quit()
+
+
+class Case(Morpion):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, surf) -> None:
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.surf = surf
+        pygame.draw.rect(self.surf, WHITE, pygame.Rect(
+            self.x1, self.y1, self.x2, self.y2,))
+
+    def selected(self, image):
+        self.surf.blit(image, (self.x1, self.y1))
+
+
+if __name__ == "__main__":
+    game = Morpion(WINDOWSIZE)
+    game.start()
