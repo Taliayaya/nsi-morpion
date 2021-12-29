@@ -30,7 +30,7 @@ class Case(pg.Rect):
     def eteindre(self):
         self.lit = False
         pg.draw.rect(surf,COULEUR_DESSIN,((self.left,self.top),(self.width,self.height)),LARGEUR_LIGNE)
-    def dessiner(self, value): #2 Pour rien, 0 pour Croix, 1 pour Rond
+    def dessiner(self, value): #-1 Pour rien, 0 pour Croix, 1 pour Rond
         pg.draw.rect(surf,COULEUR_FOND,((self.left + 5,self.top + 5),\
                                         (self.width - LARGEUR_LIGNE,self.height - LARGEUR_LIGNE)),0)
         if not(value):
@@ -50,7 +50,10 @@ class Grid():
         # Valeurs
         self.wincond = wincond
         self.layout = []
-        self.positions = [[-1 * casey * casex]]
+        ligne = [-1] * dimy
+        self.positions = []
+        for i in range(dimx):
+            self.positions.append(ligne.copy())
         # Création dans une liste des cases contenues et dessin du plateau de jeu
         start_vertical = PLACE_GRILLE_VERTI
         start_horizontal = PLACE_GRILLE_HORI
@@ -73,16 +76,34 @@ class Grid():
     def check(self, posx, posy, value):
         #Cherche si le joueur value a gagné avec le coup joué en (posx, posy)
         #Renvoie 0 si rien n'est trouvé, et 1 si le joueur est gagnant
-        for i in range(max(0,posx-wincond), min(len(self.layout), posx+wincond)):
+
+        for i in range(max(0,posy-self.wincond), min(len(self.positions[0]), posy+self.wincond)):
         #Check les lignes
-            pass
-        for i in range(max(0,posy-wincond), min(len(self.layout[0], posy+wincond))):
+            for j in range(self.wincond):
+                if not(self.positions[posx][i+j-self.wincond] == value):
+                    break
+                elif j == self.wincond-1 :
+                    return 1
+
+        for i in range(max(0,posx-self.wincond), min(len(self.positions), posx+self.wincond)):
         #Check les colonnes
-            pass
-        for i in range(max(0,posx-wincond, posy-wincond),\
-                       min(len(self.layout[0], posx+wincond, posy+wincond))):
-        #Check les diagonales (à trouver)
-            pass
+            for j in range(self.wincond):
+                if not(self.positions[i+j-self.wincond][posy] == value):
+                    break
+                elif j == self.wincond-1 :
+                    return 1
+
+        #Check la diagonale du haut-gauche au bas-droite
+        #Coordonnées du point auquel la diagonale commence
+        point_debut = (max(posx-min(self.wincond, posy), 0), max(posy-min(self.wincond, posx), 0))
+
+        #Check la diagonale du haut-droite au bas-gauche
+        #Coordonnées du point auquel la diagonale commence
+        point_debut = (max(posx-min(self.wincond, len(self.positions[0])-posy), 0),\
+                           min(posy + min(posx, self.wincond), len(self.positions[0])))
+
+        #Rien trouvé
+        return 0
 
 def init():
     """Portion à faire dans le design POSIX"""
@@ -138,7 +159,9 @@ def run():
                 # elif event.key == pg.
                 if event.key == pg.K_RETURN: # Permet de placer sa pièce
                     grille[(xactuel,yactuel)].dessiner(player_actuel)
-                    player_actuel = not(player_actuel) # Change de joueur
+                    grille.positions[xactuel][yactuel] = player_actuel
+                    print(grille.check(xactuel, yactuel, player_actuel))
+                    player_actuel = abs(1-player_actuel) # Change de joueur
         # if event.type == MOUSEBUTTONDOWN(1,0,0):  event qui va premettre par la suite de connaitre la
         # position de la souris lorsqu'on clique dessus pour pouvoir quelle case select ou lightup
         pg.display.flip()
