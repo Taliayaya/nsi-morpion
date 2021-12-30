@@ -50,6 +50,8 @@ class Grid():
         # Valeurs
         self.wincond = wincond
         self.layout = []
+        self.hauteur = dimx
+        self.largeur = dimy
         ligne = [-1] * dimy
         self.positions = []
         for i in range(dimx):
@@ -77,7 +79,7 @@ class Grid():
         #Cherche si le joueur value a gagné avec le coup joué en (posx, posy)
         #Renvoie 0 si rien n'est trouvé, et 1 si le joueur est gagnant
 
-        for i in range(max(0,posy+1-self.wincond), min(len(self.positions[0])-self.wincond, posy)+1):
+        for i in range(max(0,posy+1-self.wincond), min(self.largeur-self.wincond, posy)+1):
         #Check les lignes
             for j in range(self.wincond):
                 if not(self.positions[posx][i+j] == value):
@@ -85,7 +87,7 @@ class Grid():
                 elif j == self.wincond-1 :
                     return 1
 
-        for i in range(max(0,posx+1-self.wincond), min(len(self.positions)-self.wincond, posx)+1):
+        for i in range(max(0,posx+1-self.wincond), min(self.hauteur-self.wincond, posx)+1):
         #Check les colonnes
             for j in range(self.wincond):
                 if not(self.positions[i+j][posy] == value):
@@ -96,13 +98,28 @@ class Grid():
         #Check la diagonale du haut-gauche au bas-droite
         #Coordonnées du point auquel la diagonale commence
         point_debut = (max(posx-min(self.wincond, posy), 0), max(posy-min(self.wincond, posx), 0))
-        print(point_debut)
+        i=0
+        while(i+self.wincond<min(self.hauteur-point_debut[0],self.largeur-point_debut[1])+1):
+            for j in range(self.wincond):
+                if not(self.positions[point_debut[0]+i+j][point_debut[1]+i+j] == value):
+                    break
+                elif j== self.wincond-1:
+                    return 1
+            i+=1
 
         #Check la diagonale du haut-droite au bas-gauche
         #Coordonnées du point auquel la diagonale commence
-        point_debut = (max(posx-min(self.wincond, len(self.positions[0])-1-posy), 0),\
-                           min(posy + min(posx, self.wincond), len(self.positions[0])-1))
+        point_debut = (max(posx-min(self.wincond-1, self.largeur-posy-1), 0),\
+                           min(posy + min(posx, self.wincond-1), self.largeur-1))
         print(point_debut)
+        i=0
+        while(i+self.wincond<min(self.hauteur-point_debut[0],point_debut[1]+1)+1):
+            for j in range(self.wincond):
+                if not(self.positions[point_debut[0]+i+j][point_debut[1]-i-j] == value):
+                    break
+                elif j==self.wincond-1:
+                    return 1
+            i+=1
 
         #Rien trouvé
         return 0
