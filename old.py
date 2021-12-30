@@ -77,18 +77,18 @@ class Grid():
         #Cherche si le joueur value a gagné avec le coup joué en (posx, posy)
         #Renvoie 0 si rien n'est trouvé, et 1 si le joueur est gagnant
 
-        for i in range(max(0,posy+1-self.wincond), min(len(self.positions[0])-self.wincond, posy)+1):
+        for i in range(max(0,posy-self.wincond), min(len(self.positions[0]), posy+self.wincond)):
         #Check les lignes
             for j in range(self.wincond):
-                if not(self.positions[posx][i+j] == value):
+                if not(self.positions[posx][i+j-self.wincond] == value):
                     break
                 elif j == self.wincond-1 :
                     return 1
 
-        for i in range(max(0,posx+1-self.wincond), min(len(self.positions)-self.wincond, posx)+1):
+        for i in range(max(0,posx-self.wincond), min(len(self.positions), posx+self.wincond)):
         #Check les colonnes
             for j in range(self.wincond):
-                if not(self.positions[i+j][posy] == value):
+                if not(self.positions[i+j-self.wincond][posy] == value):
                     break
                 elif j == self.wincond-1 :
                     return 1
@@ -100,8 +100,8 @@ class Grid():
 
         #Check la diagonale du haut-droite au bas-gauche
         #Coordonnées du point auquel la diagonale commence
-        point_debut = (max(posx-min(self.wincond, len(self.positions[0])-1-posy), 0),\
-                           min(posy + min(posx, self.wincond), len(self.positions[0])-1))
+        point_debut = (max(posx-min(self.wincond, len(self.positions[0])-posy), 0),\
+                           min(posy + min(posx, self.wincond), len(self.positions[0])))
         print(point_debut)
 
         #Rien trouvé
