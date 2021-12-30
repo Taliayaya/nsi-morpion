@@ -1,4 +1,5 @@
 import pygame
+import AI_easy
 
 # Window Size
 WINDOWSIZE = 600  # aussi disponible en 900
@@ -23,6 +24,8 @@ class Morpion:
             [0, 0, 0],
             [0, 0, 0]
         ]
+        self.canPlay = True
+        self.maxTurn = 9
         ####
         # Permet de calculer les dimensions des cases
         # à partir de la taille de la fenêtre indiquée (WINDOWSIZE)
@@ -116,6 +119,11 @@ class Morpion:
             return self.morpion[2][0], (6, 4, 2)
 
     def setVictory(self, victoryTuple):
+        """
+        Permet de mettre en place les paramètres de victoire
+        Args:
+            victoryTuple: tuple contenant la lettre du vainqueur et les coord des points gagnants
+        """
         winner = victoryTuple[0]
         pos = victoryTuple[1]
         if winner == 'X':
@@ -125,6 +133,26 @@ class Morpion:
         self.listCase[pos[0]].selected(winnerIcon)
         self.listCase[pos[1]].selected(winnerIcon)
         self.listCase[pos[2]].selected(winnerIcon)
+        self.canPlay = False
+
+    def ai_plays(self, coord, selectionImage, user):
+        """Permet d'interpréter les coups de l'IA
+        Args:
+            coord: Correspond au coup proposé par l'IA
+            selectionImage: Correspond à l'image "O" ou "X" correspondant à l'IA
+            user: Correspond à la lettre "O" ou "X" correspondant à l'IA
+            """
+
+        # 0 1 2
+        # 3 4 5
+        # 6 7 8
+        if coord[0] == 0:
+            self.listCase[coord[1]].selected(selectionImage)
+        elif coord[0] == 1:
+            self.listCase[coord[1]+3].selected(selectionImage)
+        else:
+            self.listCase[coord[1]+6].selected(selectionImage)
+        self.morpion[coord[0]][coord[1]] = user
 
     def handleSelect(self, clickPos):
         """Permet de gérer la sélection du click
@@ -135,90 +163,142 @@ class Morpion:
         """
 
         # Permet de déterminer à qui il s'agit de jouer
+        print("clickPos", clickPos)
         if self.turn % 2 == 0:
             selectionImage = self.X
             user = 'X'
+            ###
+            # Effectue les tests d'emplacements de souris
+            # Colonne -> lignes
+            # puis selectionne la case correspondante
+            # et modifie self.morpion
+            ###
+            if clickPos[0] <= self.coordColumn2:
+                if clickPos[1] <= self.coordColumn2:
+                    # correspond à
+                    # X 0 0
+                    # 0 0 0
+                    # 0 0 0
+                    if self.morpion[0][0] == 0:
+                        self.listCase[0].selected(selectionImage)
+                        self.morpion[0][0] = user
+                    else:
+                        return
+                elif clickPos[1] <= self.coordColumn3:
+                    # correspond à
+                    # 0 0 0
+                    # X 0 0
+                    # 0 0 0
+                    if self.morpion[1][0] == 0:
+                        self.listCase[3].selected(selectionImage)
+                        self.morpion[1][0] = user
+                    else:
+                        return
+                else:
+                    # correspond à
+                    # 0 0 0
+                    # 0 0 0
+                    # X 0 0
+                    if self.morpion[2][0] == 0:
+                        self.listCase[6].selected(selectionImage)
+                        self.morpion[2][0] = user
+                    else:
+                        return
+
+            elif clickPos[0] <= self.coordColumn3:
+                if clickPos[1] <= self.coordColumn2:
+                    # correspond à
+                    # 0 X 0
+                    # 0 0 0
+                    # 0 0 0
+                    if self.morpion[0][1] == 0:
+                        self.listCase[1].selected(selectionImage)
+                        self.morpion[0][1] = user
+                    else:
+                        return
+                elif clickPos[1] <= self.coordColumn3:
+                    # correspond à
+                    # 0 0 0
+                    # 0 X 0
+                    # 0 0 0
+                    if self.morpion[1][1] == 0:
+                        self.listCase[4].selected(selectionImage)
+                        self.morpion[1][1] = user
+                    else:
+                        return
+                else:
+                    # correspond à
+                    # 0 0 0
+                    # 0 0 0
+                    # 0 X 0
+                    if self.morpion[2][1] == 0:
+                        self.listCase[7].selected(selectionImage)
+                        self.morpion[2][1] = user
+                    else:
+                        return
+            else:
+                if clickPos[1] <= self.coordColumn2:
+                    # correspond à
+                    # 0 0 X
+                    # 0 0 0
+                    # 0 0 0
+                    if self.morpion[0][2] == 0:
+                        self.listCase[2].selected(selectionImage)
+                        self.morpion[0][2] = user
+                    else:
+                        return
+                elif clickPos[1] <= self.coordColumn3:
+                    # correspond à
+                    # 0 0 0
+                    # 0 0 X
+                    # 0 0 0
+                    if self.morpion[1][2] == 0:
+                        self.listCase[5].selected(selectionImage)
+                        self.morpion[1][2] = user
+                    else:
+                        return
+                else:
+                    # correspond à
+                    # 0 0 0
+                    # 0 0 0
+                    # 0 0 X
+                    if self.morpion[2][2] == 0:
+                        self.listCase[8].selected(selectionImage)
+                        self.morpion[2][2] = user
+                    else:
+                        return
         else:
             selectionImage = self.O
             user = 'O'
+            ai = AI_easy.Morpion_AI_Easy(self.morpion, user)
+            if self.canPlay and self.turn < self.maxTurn:
+                aiCoord = ai.aiAnswers()
+                print("AI : ", aiCoord)
+                self.ai_plays(aiCoord, selectionImage, user)
 
-        ###
-        # Effectue les tests d'emplacements de souris
-        # Colonne -> lignes
-        # puis selectionne la case correspondante
-        # et modifie self.morpion
-        ###
-        if clickPos[0] <= self.coordColumn2:
-            if clickPos[1] <= self.coordColumn2:
-                # correspond à
-                # X 0 0
-                # 0 0 0
-                # 0 0 0
-                self.listCase[0].selected(selectionImage)
-                self.morpion[0][0] = user
-            elif clickPos[1] <= self.coordColumn3:
-                # correspond à
-                # 0 0 0
-                # X 0 0
-                # 0 0 0
-                self.listCase[3].selected(selectionImage)
-                self.morpion[1][0] = user
-            else:
-                # correspond à
-                # 0 0 0
-                # 0 0 0
-                # X 0 0
-                self.listCase[6].selected(selectionImage)
-                self.morpion[2][0] = user
-        elif clickPos[0] <= self.coordColumn3:
-            if clickPos[1] <= self.coordColumn2:
-                # correspond à
-                # 0 X 0
-                # 0 0 0
-                # 0 0 0
-                self.listCase[1].selected(selectionImage)
-                self.morpion[0][1] = user
-            elif clickPos[1] <= self.coordColumn3:
-                # correspond à
-                # 0 0 0
-                # 0 X 0
-                # 0 0 0
-                self.listCase[4].selected(selectionImage)
-                self.morpion[1][1] = user
-            else:
-                # correspond à
-                # 0 0 0
-                # 0 0 0
-                # 0 X 0
-                self.listCase[7].selected(selectionImage)
-                self.morpion[2][1] = user
-        else:
-            if clickPos[1] <= self.coordColumn2:
-                # correspond à
-                # 0 0 X
-                # 0 0 0
-                # 0 0 0
-                self.listCase[2].selected(selectionImage)
-                self.morpion[0][2] = user
-            elif clickPos[1] <= self.coordColumn3:
-                # correspond à
-                # 0 0 0
-                # 0 0 X
-                # 0 0 0
-                self.listCase[5].selected(selectionImage)
-                self.morpion[1][2] = user
-            else:
-                # correspond à
-                # 0 0 0
-                # 0 0 0
-                # 0 0 X
-                self.listCase[8].selected(selectionImage)
-                self.morpion[2][2] = user
         victoryCoord = self.handleVictory()
         if(victoryCoord):
             self.setVictory(victoryCoord)
+        if self.turn == self.maxTurn:
+            self.canPlay = False
         self.turn += 1
-        print(self.morpion)
+        print("TURN", self.turn)
+
+    def restart(self):
+        self.morpion = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        self.listCase = list(map(Case, self.coordonneesCasesX1, self.coordonneesCasesY1,
+                                 self.coordonneesCasesX2, self.coordonneesCasesY2, [self.surf]*9))
+        self.canPlay = True
+        if self.maxTurn == 9:
+            self.turn = 1
+            self.maxTurn = 10
+        else:
+            self.turn = 0
+            self.maxTurn = 9
 
     def start(self):
         run = True
@@ -235,13 +315,20 @@ class Morpion:
         while run:
             clock.tick(30)
             pygame.display.flip()
+
+            # Simule le tour de l'IA
+            if self.turn % 2 == 1 and self.canPlay:
+                print(f"IA PLAYS {self.turn}")
+                self.handleSelect(0)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if pygame.mouse.get_pressed() == (1, 0, 0):
-                        clickPos = pygame.mouse.get_pos()
-                        self.handleSelect(clickPos)
+                        if self.canPlay:
+                            clickPos = pygame.mouse.get_pos()
+                            self.handleSelect(clickPos)
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
@@ -249,7 +336,7 @@ class Morpion:
                     elif event.key == pygame.K_a:
                         print("vous avez appuyé sur la touche A")
                     elif event.key == pygame.K_RETURN:
-                        print("vous avez appuyé sur la touche Entrée")
+                        self.restart()
                     else:
                         print("vous avez appuyé sur une touche")
             pygame.display.flip()
