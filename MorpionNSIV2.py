@@ -177,7 +177,10 @@ def run():
                 if event.key == pg.K_SPACE: # Permet de placer sa pièce
                     grille[(xactuel,yactuel)].dessiner(player_actuel)
                     grille.positions[xactuel][yactuel] = player_actuel
-                    print(grille.check(xactuel, yactuel, player_actuel))
+                    if (grille.check(xactuel, yactuel, player_actuel)):
+                            running = False
+                            print(f"Victoire du joueur {player_actuel +1} !")
+                            # Passage à la prochaine partie
                     player_actuel = abs(1-player_actuel) # Change de joueur
         # if event.type == MOUSEBUTTONDOWN(1,0,0):  event qui va premettre par la suite de connaitre la
         # position de la souris lorsqu'on clique dessus pour pouvoir quelle case select ou lightup
