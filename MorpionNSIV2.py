@@ -47,6 +47,11 @@ class Grid():
     def __init__(self, dimx, dimy, wincond): # A voir si les cases de contrôle et les tours seront gérés ici
         casex = DIMENSIONS_GRILLE/dimx #Valeurs qui seront peut être changeables à l'avenir
         casey = DIMENSIONS_GRILLE/dimy
+        #Cases de contrôle
+        self.case_croix = Case(280,500,80,80) #Positions des cases de contrôle
+        self.case_rond = Case(410,500,80,80)
+        pg.draw.rect(surf,COULEUR_CLIGNO,(280,500,80,80),5)
+        pg.draw.rect(surf,COULEUR_CLIGNO,(410,500,80,80),5)
         # Valeurs
         self.wincond = wincond
         self.layout = []
@@ -69,11 +74,19 @@ class Grid():
             start_vertical = start_vertical + casex
         pg.draw.line(surf, COULEUR_DESSIN,(start_vertical, 100),(start_vertical, 460),LARGEUR_LIGNE)
 
+    def showturn(self, player):
+        if player :
+            self.case_croix.dessiner(-1)
+            self.case_rond.dessiner(1)
+        else:
+            self.case_rond.dessiner(-1)
+            self.case_croix.dessiner(0)
+
     def __getitem__(self, key):
         return self.layout[key[0]][key[1]]
 
     def __del__(self):
-        pass # Doit permettre d'effacer complètement les cases mais aussi les lignes de la grille (sera géré par init)
+        surf.fill(COULEUR_FOND)
 
     def check(self, posx, posy, value):
         #Cherche si le joueur value a gagné avec le coup joué en (posx, posy)
@@ -131,29 +144,20 @@ def init():
     pg.display.set_allow_screensaver(True)
     pg.mouse.set_cursor(diamond)
     surf.fill(COULEUR_FOND)
-    case_croix = Case(280,500,80,80) #Positions des cases de contrôle
-    case_rond = Case(360,500,80,80)
-    pg.draw.rect(surf,COULEUR_CLIGNO,(280,500,80,80),5)
-    pg.draw.rect(surf,COULEUR_CLIGNO,(410,500,80,80),5)
-    # Fenêtre de choix de la configuration
-    run()
+    # Fenêtre de choix de la configuration, dans une boucle infinie
+    run(6, 6, 3)
     # Fenêtre pour rejouer (et boucle à installer)
     pg.quit()
 
 
-def run():
-    """A aussi faire dans un design POSIX"""
+def run(hauteur, largeur, wincondition):
     running = True
-    # Le plateau doit être créé ici
-    # Peut être faire un premier widget permettant de choisir la taille du plateau ?
-    # Faire une vérification de la taille de la win condition par rapport aux dimensions
-    hauteur = 6
-    largeur = 6
-    grille = Grid(hauteur, largeur, 3)
+    grille = Grid(hauteur, largeur, wincondition)
     timer = 0
     xactuel = 0 #Les coordonnées à mettre à jour
     yactuel = 0
     player_actuel = 0 #Echange entre 0 (croix) et 1 (rond)
+    grille.showturn(player_actuel)
     while running:
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
@@ -161,27 +165,32 @@ def run():
                     if xactuel:
                         grille[(xactuel,yactuel)].eteindre()
                         xactuel -=1
-                if event.key == pg.K_DOWN:
+                elif event.key == pg.K_DOWN:
                     if xactuel != hauteur-1 :
                         grille[(xactuel,yactuel)].eteindre()
                         xactuel += 1
-                if event.key == pg.K_RIGHT:
+                elif event.key == pg.K_RIGHT:
                     if yactuel != largeur-1 :
                         grille[(xactuel,yactuel)].eteindre()
                         yactuel += 1
-                if event.key == pg.K_LEFT:
+                elif event.key == pg.K_LEFT:
                     if yactuel:
                         grille[(xactuel,yactuel)].eteindre()
                         yactuel -= 1
-                # Fonction de reset : sortir du run ? Re-init ?
-                if event.key == pg.K_SPACE: # Permet de placer sa pièce
-                    grille[(xactuel,yactuel)].dessiner(player_actuel)
-                    grille.positions[xactuel][yactuel] = player_actuel
-                    if (grille.check(xactuel, yactuel, player_actuel)):
-                            running = False
-                            print(f"Victoire du joueur {player_actuel +1} !")
-                            # Passage à la prochaine partie
-                    player_actuel = abs(1-player_actuel) # Change de joueur
+                elif event.key == pg.K_SPACE: # Permet de placer sa pièce
+                    if grille.positions[xactuel][yactuel] == -1: #Vérifie que la case est vide
+                        grille[(xactuel,yactuel)].dessiner(player_actuel)
+                        grille.positions[xactuel][yactuel] = player_actuel
+                        if (grille.check(xactuel, yactuel, player_actuel)):
+                                running = False
+                                print(f"Victoire du joueur {player_actuel +1} !")
+                                # Passage à la prochaine partie
+                        player_actuel = abs(1-player_actuel) # Change de joueur
+                        grille.showturn(player_actuel)
+                elif event.key == pg.K_RETURN: #Permet de réinitialiser la partie
+                    running = False
+                    del(grille)
+                    #Passage à la prochaine partie
         # if event.type == MOUSEBUTTONDOWN(1,0,0):  event qui va premettre par la suite de connaitre la
         # position de la souris lorsqu'on clique dessus pour pouvoir quelle case select ou lightup
         pg.display.flip()
