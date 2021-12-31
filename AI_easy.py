@@ -1,8 +1,8 @@
 from random import randint
 """
 AI qui lit les coups sur le moment sans faire de potentielle prédiction.
-Elle choisit le meilleur coup à partir d'un tableau de coordonnés 
-correspondant au morpion, elle attribue un score à chaque case pour 
+Elle choisit le meilleur coup à partir d'un tableau de coordonnés
+correspondant au morpion, elle attribue un score à chaque case pour
 déterminer quel est son meilleur mouvement.
 
 Difficulté : ⭐

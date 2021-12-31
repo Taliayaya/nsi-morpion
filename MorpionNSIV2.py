@@ -24,12 +24,12 @@ class Case(pg.Rect):
     def light(self):
         self.lit = not(self.lit)
         if self.lit :
-            pg.draw.rect(surf,COULEUR_CLIGNO,((self.left,self.top),(self.width,self.height)),LARGEUR_LIGNE)
+            pg.draw.rect(surf,COULEUR_CLIGNO,((self.left+1,self.top+1),(self.width,self.height)),LARGEUR_LIGNE-5)
         else :
             self.eteindre()
     def eteindre(self):
         self.lit = False
-        pg.draw.rect(surf,COULEUR_DESSIN,((self.left,self.top),(self.width,self.height)),LARGEUR_LIGNE)
+        pg.draw.rect(surf,COULEUR_DESSIN,((self.left+1,self.top+1),(self.width,self.height)),LARGEUR_LIGNE-5)
     def dessiner(self, value): #-1 Pour rien, 0 pour Croix, 1 pour Rond
         pg.draw.rect(surf,COULEUR_FOND,((self.left + 5,self.top + 5),\
                                         (self.width - LARGEUR_LIGNE,self.height - LARGEUR_LIGNE)),0)
@@ -111,14 +111,13 @@ class Grid():
         #Coordonnées du point auquel la diagonale commence
         point_debut = (max(posx-min(self.wincond-1, self.largeur-posy-1), 0),\
                            min(posy + min(posx, self.wincond-1), self.largeur-1))
-        print(point_debut)
         i=0
         while(i+self.wincond<min(self.hauteur-point_debut[0],point_debut[1]+1)+1):
             for j in range(self.wincond):
                 if not(self.positions[point_debut[0]+i+j][point_debut[1]-i-j] == value):
                     break
                 elif j==self.wincond-1:
-                    return 1
+                    return kuraO
             i+=1
 
         #Rien trouvé
@@ -175,8 +174,7 @@ def run():
                         grille[(xactuel,yactuel)].eteindre()
                         yactuel -= 1
                 # Fonction de reset : sortir du run ? Re-init ?
-                # elif event.key == pg.
-                if event.key == pg.K_RETURN: # Permet de placer sa pièce
+                if event.key == pg.K_SPACE: # Permet de placer sa pièce
                     grille[(xactuel,yactuel)].dessiner(player_actuel)
                     grille.positions[xactuel][yactuel] = player_actuel
                     print(grille.check(xactuel, yactuel, player_actuel))
