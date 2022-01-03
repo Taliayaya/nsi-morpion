@@ -1,5 +1,6 @@
 import pygame
 import AI_easy
+import AI_difficult
 
 # Window Size
 WINDOWSIZE = 600  # aussi disponible en 900
@@ -7,6 +8,7 @@ WINDOWSIZE = 600  # aussi disponible en 900
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+RED = (139, 0, 0)
 
 # Case selection images
 X = pygame.image.load('assets/images/X.png')
@@ -26,6 +28,7 @@ class Morpion:
         ]
         self.canPlay = True
         self.maxTurn = 9
+        self.difficult = False
         ####
         # Permet de calculer les dimensions des cases
         # à partir de la taille de la fenêtre indiquée (WINDOWSIZE)
@@ -268,11 +271,16 @@ class Morpion:
                     else:
                         return
         else:
+            # Correspond à la gestion des coups de l'AI
             selectionImage = self.O
             user = 'O'
-            ai = AI_easy.Morpion_AI_Easy(self.morpion, user)
             if self.canPlay and self.turn < self.maxTurn:
-                aiCoord = ai.aiAnswers()
+                if self.difficult:
+                    board = self.boardConversion(user, "X")
+                    aiCoord = AI_difficult.ai_turn(board)
+                else:
+                    ai = AI_easy.Morpion_AI_Easy(self.morpion, user)
+                    aiCoord = ai.aiAnswers()
                 print("AI : ", aiCoord)
                 self.ai_plays(aiCoord, selectionImage, user)
 
@@ -281,8 +289,23 @@ class Morpion:
             self.setVictory(victoryCoord)
         if self.turn == self.maxTurn:
             self.canPlay = False
-        self.turn += 1
-        print("TURN", self.turn)
+        else:
+            self.turn += 1
+            print("TURN", self.turn)
+
+    def boardConversion(self, user, ennemy):
+        board = [
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        for i in range(3):
+            for j in range(3):
+                if self.morpion[i][j] == user:
+                    board[i][j] = +1
+                elif self.morpion[i][j] == ennemy:
+                    board[i][j] = -1
+        return board
 
     def restart(self):
         self.morpion = [
@@ -332,7 +355,15 @@ class Morpion:
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
-                        print("vous avez appuyé sur la touche espace")
+                        if not self.canPlay:
+                            self.difficult = not self.difficult
+                            if self.difficult:
+                                self.surf.fill(RED)
+                                print("Passage en difficulté difficile ⭐⭐⭐")
+                            else:
+                                self.surf.fill(BLACK)
+                                print("Passage en difficulté facile ⭐")
+                            self.restart()
                     elif event.key == pygame.K_a:
                         print("vous avez appuyé sur la touche A")
                     elif event.key == pygame.K_RETURN:
