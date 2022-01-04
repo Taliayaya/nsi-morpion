@@ -23,7 +23,7 @@ class Morpion_AI_Easy:
 
         self.player = player
 
-    def testRow(self):
+    def testRow(self) -> tuple:
         """Permet d'attribuer un score à toutes les cases en lecture par ligne"""
         bestRowCoord = []
         bestPoints = 0

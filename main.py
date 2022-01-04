@@ -29,6 +29,7 @@ class Morpion:
         self.canPlay = True
         self.maxTurn = 9
         self.difficult = False
+        self.isPlayingVsAI = True
         ####
         # Permet de calculer les dimensions des cases
         # à partir de la taille de la fenêtre indiquée (WINDOWSIZE)
@@ -121,24 +122,28 @@ class Morpion:
             print('VICTORY')
             return self.morpion[2][0], (6, 4, 2)
 
-    def setVictory(self, victoryTuple):
+    def setVictory(self, victoryTuple) -> None:
         """
         Permet de mettre en place les paramètres de victoire
         Args:
             victoryTuple: tuple contenant la lettre du vainqueur et les coord des points gagnants
         """
+        # On récupère les données envoyées par la fonction précédente
         winner = victoryTuple[0]
         pos = victoryTuple[1]
+        # Définie qui a gagné
         if winner == 'X':
             winnerIcon = self.victory_X
         else:
             winnerIcon = self.victory_O
+        # Change la couleur de la triplette gagnante en rouge
         self.listCase[pos[0]].selected(winnerIcon)
         self.listCase[pos[1]].selected(winnerIcon)
         self.listCase[pos[2]].selected(winnerIcon)
+        # Empêche de continer à jouer
         self.canPlay = False
 
-    def ai_plays(self, coord, selectionImage, user):
+    def ai_plays(self, coord, selectionImage, user) -> None:
         """Permet d'interpréter les coups de l'IA
         Args:
             coord: Correspond au coup proposé par l'IA
@@ -157,7 +162,7 @@ class Morpion:
             self.listCase[coord[1]+6].selected(selectionImage)
         self.morpion[coord[0]][coord[1]] = user
 
-    def handleSelect(self, clickPos):
+    def handleSelect(self, clickPos) -> None:
         """Permet de gérer la sélection du click
         et de sélectionner la case correspondante à l'emplacement du click
 
@@ -167,9 +172,13 @@ class Morpion:
 
         # Permet de déterminer à qui il s'agit de jouer
         print("clickPos", clickPos)
-        if self.turn % 2 == 0:
-            selectionImage = self.X
-            user = 'X'
+        if self.turn % 2 == 0 or not self.isPlayingVsAI:
+            if self.turn % 2 == 0:
+                selectionImage = self.X
+                user = 'X'
+            else:
+                selectionImage = self.O
+                user = 'O'
             ###
             # Effectue les tests d'emplacements de souris
             # Colonne -> lignes
@@ -293,12 +302,17 @@ class Morpion:
             self.turn += 1
             print("TURN", self.turn)
 
-    def boardConversion(self, user, ennemy):
+    def boardConversion(self, user, ennemy) -> list:
+        """
+        Convertie les "O" et les "X" du plateau de jeu en 
+        +1 et -1 pour l'AI minimax
+         """
         board = [
             [0, 0, 0],
             [0, 0, 0],
             [0, 0, 0]
         ]
+        # Parcours le tableau et remplace par -1 ou +1
         for i in range(3):
             for j in range(3):
                 if self.morpion[i][j] == user:
@@ -307,7 +321,7 @@ class Morpion:
                     board[i][j] = -1
         return board
 
-    def restart(self):
+    def restart(self) -> None:
         self.morpion = [
             [0, 0, 0],
             [0, 0, 0],
@@ -323,7 +337,25 @@ class Morpion:
             self.turn = 0
             self.maxTurn = 9
 
-    def start(self):
+    def handleDifficulty(self) -> None:
+        """
+        Permet de changer la difficulté de l'IA selectionnée
+        """
+        self.difficult = not self.difficult
+        if self.difficult:
+            self.surf.fill(RED)
+            print("Passage en difficulté difficile ⭐⭐⭐")
+        else:
+            self.surf.fill(BLACK)
+            print("Passage en difficulté facile ⭐")
+        self.restart()
+
+    def start(self) -> None:
+        """
+        Correspond à la boucle principale du jeu.
+        Elle appelle la majorité des fonctions.
+        Elle doit être appelée pour lancer le jeu.
+        """
         run = True
         clock = pygame.time.Clock()
 
@@ -340,41 +372,42 @@ class Morpion:
             pygame.display.flip()
 
             # Simule le tour de l'IA
-            if self.turn % 2 == 1 and self.canPlay:
+            if self.turn % 2 == 1 and self.canPlay and self.isPlayingVsAI:
                 print(f"IA PLAYS {self.turn}")
                 self.handleSelect(0)
 
             for event in pygame.event.get():
+
+                # Permet de quitter le jeu
                 if event.type == pygame.QUIT:
                     run = False
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    # Permet de récupérer les coordonnées du click
                     if pygame.mouse.get_pressed() == (1, 0, 0):
                         if self.canPlay:
                             clickPos = pygame.mouse.get_pos()
                             self.handleSelect(clickPos)
 
                 if event.type == pygame.KEYDOWN:
+                    # Permet de changer la difficulté de l'AI
                     if event.key == pygame.K_SPACE:
                         if not self.canPlay:
-                            self.difficult = not self.difficult
-                            if self.difficult:
-                                self.surf.fill(RED)
-                                print("Passage en difficulté difficile ⭐⭐⭐")
-                            else:
-                                self.surf.fill(BLACK)
-                                print("Passage en difficulté facile ⭐")
-                            self.restart()
+                            self.handleDifficulty()
                     elif event.key == pygame.K_a:
-                        print("vous avez appuyé sur la touche A")
+                        # Permet de passer de PvE à PvP
+                        if not self.canPlay:
+                            self.isPlayingVsAI = not self.isPlayingVsAI
                     elif event.key == pygame.K_RETURN:
+                        # Permet de relancer la partie
                         self.restart()
-                    else:
-                        print("vous avez appuyé sur une touche")
+
             pygame.display.flip()
         pygame.quit()
 
 
 class Case(Morpion):
+    """Correspond à une case du Morpion"""
+
     def __init__(self, x1: int, y1: int, x2: int, y2: int, surf) -> None:
         self.x1 = x1
         self.y1 = y1
@@ -385,6 +418,8 @@ class Case(Morpion):
             self.x1, self.y1, self.x2, self.y2,))
 
     def selected(self, image):
+        """Permet d'afficher 'X' ou 'O' en fonction de
+        qui a selectionné la case."""
         self.surf.blit(image, (self.x1, self.y1))
 
 
