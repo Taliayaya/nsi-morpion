@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from random import randint
 """
 AI qui lit les coups sur le moment sans faire de potentielle prédiction.
