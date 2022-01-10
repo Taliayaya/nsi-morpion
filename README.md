@@ -64,4 +64,10 @@ Vous pouvez les exécuter de plusieurs façon différentes.
 
 #### Version original (`main.py`)
 
-Dans cette version, le jeu se joue à la souris. A tour de rôle, un utilisateur joue un coup. Un coup se joue en selectionannt une case à l'aide du clic gauche de la souris sur une case vide.
+Dans cette version, le jeu se joue à la souris. A tour de rôle, un utilisateur joue un coup. Un coup se joue en selectionant une case à l'aide du clic gauche de la souris sur une case vide.
+
+Lorsque l'un des deux joueurs gagne ou qu'il y a égalité, aucun des deux joueurs ne peut continuer à jouer. A ce moment donné, différentes touches sont disponible :
+
+-   `ENTER` : Appuyer sur la touche Entrer permet de recommencer une partie, alternant la personne qui commence à jouer.
+-   `SPACE` : Appuyer sur la touche Espace permet de changer la difficulté de l'IA, avec la facile comme IA par défaut.
+-   `A` : Appuyer sur la touche A permet de passer du mode contre l'IA au mode Joueur contre Joueur sur le même écran.
