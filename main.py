@@ -63,7 +63,7 @@ class Morpion:
         pygame.display.set_caption('Jeu de morpion')
 
     def handleVictory(self):
-        """Gère tous les cas de victoire possible
+        """Gère tous les cas de victoire possibless
         Renvoie un tuple contenant la lettre du gagnant
         ainsi que l'indice des cases qui ont permis la victoire
         """
@@ -165,8 +165,8 @@ class Morpion:
         self.morpion[coord[0]][coord[1]] = user
 
     def handleSelect(self, clickPos) -> None:
-        """Permet de gérer la sélection du click
-        et de sélectionner la case correspondante à l'emplacement du click
+        """Permet de gérer la sélection du clic
+        et de sélectionner la case correspondante à l'emplacement du clic
 
         Args:
             clickPos (tuple): correspond aux coordonnées du clic de la souris

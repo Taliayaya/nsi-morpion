@@ -36,10 +36,10 @@ class Case(pg.Rect):
         pg.draw.rect(surf, COULEUR_DESSIN, ((self.left+1, self.top+1),
                      (self.width, self.height)), LARGEUR_LIGNE-5)
 
-    def dessiner(self, value):  # -1 Pour rien, 0 pour Croix, 1 pour Rond
+    def dessiner(self, value):  # 0 Pour rien, -1 pour Croix, 1 pour Rond
         pg.draw.rect(surf, COULEUR_FOND, ((self.left + 5, self.top + 5),
                                           (self.width - LARGEUR_LIGNE, self.height - LARGEUR_LIGNE)), 0)
-        if not(value):
+        if value == -1:
             pg.draw.line(surf, COULEUR_DESSIN, (self.topleft[0]+10, self.topleft[1]+10),
                          (self.bottomright[0]-10, self.bottomright[1]-10), LARGEUR_LIGNE)
             pg.draw.line(surf, COULEUR_DESSIN, (self.topright[0]-10, self.topright[1]+10),
@@ -67,7 +67,7 @@ class Grid():
         self.layout = []
         self.hauteur = dimx
         self.largeur = dimy
-        ligne = [-1] * dimy
+        ligne = [0] * dimy
         self.positions = []
         for i in range(dimx):
             self.positions.append(ligne.copy())
@@ -86,12 +86,12 @@ class Grid():
             start_vertical = start_vertical + casey
 
     def showturn(self, player):
-        if player:
+        if player == -1:
+            self.case_rond.dessiner(0)
             self.case_croix.dessiner(-1)
-            self.case_rond.dessiner(1)
-        else:
-            self.case_rond.dessiner(-1)
+        elif player == 1:
             self.case_croix.dessiner(0)
+            self.case_rond.dessiner(1)
 
     def __getitem__(self, key):
         return self.layout[key[0]][key[1]]
@@ -142,12 +142,11 @@ class Grid():
                 if not(self.positions[point_debut[0]+i+j][point_debut[1]-i-j] == value):
                     break
                 elif j == self.wincond-1:
-                    return kuraO
+                    return 1
             i += 1
 
         # Rien trouvé
         return 0
-
 
 def wait_input() -> int:
     """
@@ -226,6 +225,7 @@ def init():
                         surf.blit(text, (50, 200))
                 if event.type == pg.QUIT:
                     running = False
+
     Dessiner_options()
 
 
@@ -235,7 +235,7 @@ def run(hauteur, largeur, wincondition):
     timer = 0
     xactuel = 0  # Les coordonnées à mettre à jour
     yactuel = 0
-    player_actuel = 0  # Echange entre 0 (croix) et 1 (rond)
+    player_actuel = -1  # Echange entre -1 (croix) et 1 (rond)
     grille.showturn(player_actuel)
     while running:
         for event in pg.event.get():
@@ -260,17 +260,16 @@ def run(hauteur, largeur, wincondition):
                 #     Dessiner_options()
                 elif event.key == pg.K_SPACE:  # Permet de placer sa pièce
                     # Vérifie que la case est vide
-                    print("yup")
-                    if grille.positions[xactuel][yactuel] == -1:
+                    if not(grille.positions[xactuel][yactuel]):
                         grille[(xactuel, yactuel)].dessiner(player_actuel)
                         grille.positions[xactuel][yactuel] = player_actuel
                         if (grille.check(xactuel, yactuel, player_actuel)):
                             running = False
-                            print(f"Victoire du joueur {player_actuel +1} !")
+                            print(f"Victoire du joueur {(player_actuel+3)//2} !")
                             surf.fill(COULEUR_FOND)
                             break
                         # Change de joueur
-                        player_actuel = abs(1-player_actuel)
+                        player_actuel = 0-player_actuel
                         grille.showturn(player_actuel)
                 elif event.key == pg.K_RETURN:  # Permet de réinitialiser la partie
                     running = False
