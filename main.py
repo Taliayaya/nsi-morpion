@@ -31,6 +31,7 @@ class Morpion:
         self.maxTurn = 9
         self.difficult = False
         self.isPlayingVsAI = True
+        self.showTuto = True
         ####
         # Permet de calculer les dimensions des cases
         # à partir de la taille de la fenêtre indiquée (WINDOWSIZE)
@@ -63,7 +64,7 @@ class Morpion:
 
     def handleVictory(self):
         """Gère tous les cas de victoire possible
-        Renvoie un tuple contenant la lettre du gagnant 
+        Renvoie un tuple contenant la lettre du gagnant
         ainsi que l'indice des cases qui ont permis la victoire
         """
         if self.morpion[0][0] == self.morpion[0][1] == self.morpion[0][2] and not self.morpion[0][0] == 0:
@@ -305,7 +306,7 @@ class Morpion:
 
     def boardConversion(self, user, ennemy) -> list:
         """
-        Convertie les "O" et les "X" du plateau de jeu en 
+        Convertie les "O" et les "X" du plateau de jeu en
         +1 et -1 pour l'AI minimax
          """
         board = [
@@ -351,6 +352,28 @@ class Morpion:
             print("Passage en difficulté facile ⭐")
         self.restart()
 
+    def tutorial(self) -> None:
+        self.surf.fill(WHITE)
+        smallfont = pygame.font.Font(None, 30)
+        welcome = smallfont.render(
+            "Bienvenue sur Tic-Tac-Toe !", False, BLACK)
+        returnWord = smallfont.render(
+            "Appuyer sur <RETURN> pour rejouer", False, BLACK)
+        changeDifficulty = smallfont.render(
+            "Appuyer sur <SPACE> pour changer de difficulté", False, BLACK)
+        changePvPToPvE = smallfont.render(
+            "Appuyer sur <A> pour jouer à deux", False, BLACK)
+        showTutorial = smallfont.render(
+            "Appuyer sur <H> pour afficher ce tutoriel", False, BLACK)
+        continuer = smallfont.render(
+            "Appuyer sur n'importe quelle touche pour continuer", False, BLACK)
+        self.surf.blit(welcome, (165, 150))
+        self.surf.blit(returnWord, (110, 225))
+        self.surf.blit(changePvPToPvE, (120, 260))
+        self.surf.blit(changeDifficulty, (50, 295))
+        self.surf.blit(showTutorial, (100, 330))
+        self.surf.blit(continuer, (50, 450))
+
     def start(self) -> None:
         """
         Correspond à la boucle principale du jeu.
@@ -359,7 +382,7 @@ class Morpion:
         """
         run = True
         clock = pygame.time.Clock()
-
+        pygame.font.init()
         # Fait apparaître les cases
         # de gauche à droite et de haut en bas
         # indices de self.listCase :
@@ -371,11 +394,14 @@ class Morpion:
         while run:
             clock.tick(30)
             pygame.display.flip()
+            if self.showTuto:
+                self.tutorial()
+            else:
 
-            # Simule le tour de l'IA
-            if self.turn % 2 == 1 and self.canPlay and self.isPlayingVsAI:
-                print(f"IA PLAYS {self.turn}")
-                self.handleSelect(0)
+                # Simule le tour de l'IA
+                if self.turn % 2 == 1 and self.canPlay and self.isPlayingVsAI:
+                    print(f"IA PLAYS {self.turn}")
+                    self.handleSelect(0)
 
             for event in pygame.event.get():
 
@@ -385,22 +411,29 @@ class Morpion:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     # Permet de récupérer les coordonnées du click
                     if pygame.mouse.get_pressed() == (1, 0, 0):
-                        if self.canPlay:
+                        if self.canPlay and not self.showTuto:
                             clickPos = pygame.mouse.get_pos()
                             self.handleSelect(clickPos)
 
                 if event.type == pygame.KEYDOWN:
-                    # Permet de changer la difficulté de l'AI
-                    if event.key == pygame.K_SPACE:
-                        if not self.canPlay:
-                            self.handleDifficulty()
-                    elif event.key == pygame.K_a:
-                        # Permet de passer de PvE à PvP
-                        if not self.canPlay:
-                            self.isPlayingVsAI = not self.isPlayingVsAI
-                    elif event.key == pygame.K_RETURN:
-                        # Permet de relancer la partie
+                    if self.showTuto:
+                        self.showTuto = False
+                        self.surf.fill(BLACK)
                         self.restart()
+                    else:
+                        # Permet de changer la difficulté de l'AI
+                        if event.key == pygame.K_SPACE:
+                            if not self.canPlay:
+                                self.handleDifficulty()
+                        elif event.key == pygame.K_a:
+                            # Permet de passer de PvE à PvP
+                            if not self.canPlay:
+                                self.isPlayingVsAI = not self.isPlayingVsAI
+                        elif event.key == pygame.K_RETURN:
+                            # Permet de relancer la partie
+                            self.restart()
+                        elif event.key == pygame.K_h:
+                            self.showTuto = not self.showTuto
 
             pygame.display.flip()
         pygame.quit()
